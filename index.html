@@ -80,12 +80,15 @@
             margin-top: 20px;
             height: 400px;
             width: 100%;
+            border: 2px solid #444; /* Define a clear border */
+            border-radius: 10px;    /* Apply border-radius to the container */
+            overflow: hidden;       /* Ensure child elements follow the border-radius */
         }
 
         /* Map styles with blur */
         #map {
-            height: 105%;
-            width: 105%;
+            height: 100%;
+            width: 100%;
             border-radius: 10px;
             filter: blur(5px); /* Apply blur effect when no address is provided */
             display: block;
@@ -107,8 +110,6 @@
         /* Remove blur when address is filled */
         #map.no-blur {
             filter: none; /* Remove blur when an address is selected */
-            height: 100%;
-            width: 100%;
         }
 
         #map-container .hidden {
@@ -146,12 +147,14 @@
             });
 
             autocomplete.addListener('place_changed', function () {
-                marker.setVisible(false);
                 const place = autocomplete.getPlace();
+                
                 if (!place.geometry) {
                     console.error("No details available for input: '" + place.name + "'");
                     return;
                 }
+
+                marker.setVisible(false);
 
                 // Adjust map and marker position
                 if (place.geometry.viewport) {
@@ -174,9 +177,11 @@
 
             if (place) {
                 document.getElementById('map').classList.add('no-blur');
+                document.getElementById('map').style.display = 'block';
                 document.getElementById('mapMessage').classList.add('hidden');
             } else {
                 document.getElementById('map').classList.remove('no-blur');
+                document.getElementById('map').style.display = 'none';
                 document.getElementById('mapMessage').classList.remove('hidden');
             }
 
@@ -204,6 +209,7 @@
             marker.setVisible(false);
 
             document.getElementById('map').classList.remove('no-blur');
+            document.getElementById('map').style.display = 'none';
             document.getElementById('mapMessage').classList.remove('hidden');
 
             validateForm();
@@ -231,7 +237,12 @@
 
         // Check if the address input is empty initially to show the message
         document.getElementById('addressInput').addEventListener('input', function() {
-            updateUserInput();
+            const input = document.getElementById('addressInput').value;
+            // Do not show the map until a place is selected from Google Places
+            if (!input) {
+                document.getElementById('map').style.display = 'none';
+                document.getElementById('mapMessage').classList.remove('hidden');
+            }
         });
     </script>
 </body>
