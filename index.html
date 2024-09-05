@@ -49,20 +49,6 @@
             background-color: #f3f3f3;
         }
 
-        .error-border {
-            border: 1px solid red;
-        }
-
-        .error-message {
-            color: red;
-            font-size: 12px;
-            display: none;
-        }
-
-        .show {
-            display: block;
-        }
-
         #clearButton {
             position: absolute;
             right: 10px;
@@ -80,6 +66,17 @@
             height: 400px;
             width: 100%;
             margin-top: 20px;
+            border-radius: 12px; /* Added border-radius for the map */
+            border: 1px solid #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2em;
+            color: #555;
+        }
+
+        #mapMessage {
+            display: none;
         }
     </style>
 </head>
@@ -89,7 +86,9 @@
         <button id="clearButton">&times;</button>
         <input type="hidden" id="userInput" name="userInput">
         <!-- Map container -->
-        <div id="map"></div>
+        <div id="map">
+            <span id="mapMessage">Please enter an address to display the map</span>
+        </div>
     </div>
 
     <script>
@@ -110,14 +109,14 @@
             });
 
             autocomplete.addListener('place_changed', function () {
-                marker.setVisible(false);
                 const place = autocomplete.getPlace();
                 if (!place.geometry) {
                     console.error("No details available for input: '" + place.name + "'");
                     return;
                 }
 
-                // Adjust map and marker position
+                updateUserInput();
+
                 if (place.geometry.viewport) {
                     map.fitBounds(place.geometry.viewport);
                 } else {
@@ -128,18 +127,23 @@
                 marker.setPosition(place.geometry.location);
                 marker.setVisible(true);
 
-                updateUserInput();
-
-                // Resize the widget based on map and input
-                let container = document.getElementById('container');
-                let containerHeight = window.getComputedStyle(container).height;
-                JFCustomWidget.requestFrameResize({ height: parseInt(containerHeight) + 10 });
+                resizeFrame();
             });
+
+            // Resize on load
+            resizeFrame();
         }
 
         function updateUserInput() {
             const place = document.getElementById('addressInput').value;
             document.getElementById('userInput').value = place;
+
+            if (!place) {
+                displayMessage(true);
+            } else {
+                displayMessage(false);
+            }
+
             validateForm();
         }
 
@@ -163,13 +167,35 @@
             document.getElementById('userInput').value = '';
             marker.setVisible(false);
 
+            displayMessage(true);
             validateForm();
+        }
+
+        function displayMessage(show) {
+            const mapMessage = document.getElementById('mapMessage');
+            if (show) {
+                mapMessage.style.display = 'block';
+                map.getDiv().style.display = 'none';
+            } else {
+                mapMessage.style.display = 'none';
+                map.getDiv().style.display = 'block';
+            }
+            resizeFrame();
+        }
+
+        function resizeFrame() {
+            let container = document.getElementById('container');
+            let containerHeight = window.getComputedStyle(container).height;
+            JFCustomWidget.requestFrameResize({ height: parseInt(containerHeight) + 10 });
         }
 
         document.getElementById('clearButton').addEventListener('click', clearFields);
 
         JFCustomWidget.subscribe("ready", function(response){
             let apiKey = JFCustomWidget.getWidgetSetting('apiKey');
+
+            // Initialize the map with no address initially
+            displayMessage(true);
 
             let script = document.createElement("script");
             script.src = "https://maps.googleapis.com/maps/api/js?key=" + apiKey + "&libraries=places&callback=initAutocomplete";
