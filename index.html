@@ -87,7 +87,8 @@
             height: 100%;
             width: 100%;
             border-radius: 10px;
-            filter: blur(5px); /* Default blur when no address is provided */
+            background-color: #f0f0f0; /* Default background color when no address is provided */
+            display: none; /* Hide map by default */
         }
 
         #map-container .map-message {
@@ -103,9 +104,10 @@
             text-align: center;
         }
 
-        /* Remove blur when address is filled */
-        #map.no-blur {
-            filter: none;
+        /* Remove background and show map when address is filled */
+        #map.show-map {
+            display: block;
+            background-color: transparent; /* Remove background color when map is active */
         }
 
         #map-container .hidden {
@@ -170,10 +172,10 @@
             document.getElementById('userInput').value = place;
 
             if (place) {
-                document.getElementById('map').classList.add('no-blur');
+                document.getElementById('map').classList.add('show-map');
                 document.getElementById('mapMessage').classList.add('hidden');
             } else {
-                document.getElementById('map').classList.remove('no-blur');
+                document.getElementById('map').classList.remove('show-map');
                 document.getElementById('mapMessage').classList.remove('hidden');
             }
 
@@ -200,7 +202,7 @@
             document.getElementById('userInput').value = '';
             marker.setVisible(false);
 
-            document.getElementById('map').classList.remove('no-blur');
+            document.getElementById('map').classList.remove('show-map');
             document.getElementById('mapMessage').classList.remove('hidden');
 
             validateForm();
@@ -226,6 +228,10 @@
             JFCustomWidget.sendSubmit(msg);
         });
 
+        // Check if the address input is empty initially to show the message
+        document.getElementById('addressInput').addEventListener('input', function() {
+            updateUserInput();
+        });
     </script>
 </body>
 </html>
