@@ -132,8 +132,9 @@
 
                 // Resize the widget based on map and input
                 let container = document.getElementById('container');
-                let containerHeight = window.getComputedStyle(container).height;
+                let containerHeight = container.offsetHeight;
                 JFCustomWidget.requestFrameResize({ height: parseInt(containerHeight) + 10 });
+                console.log(containerHeight);
             });
         }
 
