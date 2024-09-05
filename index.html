@@ -49,21 +49,6 @@
             background-color: #f3f3f3;
         }
 
-        label {
-            margin: 12px 0px 3px 0px;
-        }
-
-        .hidden {
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-
-        .fade-in {
-            opacity: 1;
-            visibility: visible;
-        }
-
         .error-border {
             border: 1px solid red;
         }
@@ -102,16 +87,6 @@
     <div id="container">
         <input type="text" id="addressInput" placeholder="Enter your address">
         <button id="clearButton">&times;</button>
-        <label for="streetName" id="streetNameLabel" class="hidden">Street Name:</label>
-        <input type="text" id="streetName" name="streetName" class="hidden" readonly>
-        <label for="houseNumber" id="houseNumberLabel" class="hidden">House Number:</label>
-        <input type="text" id="houseNumber" name="houseNumber" class="hidden" readonly>
-        <label for="city" id="cityLabel" class="hidden">City:</label>
-        <input type="text" id="city" name="city" class="hidden" readonly>
-        <label for="state" id="stateLabel" class="hidden">State:</label>
-        <input type="text" id="state" name="state" class="hidden" readonly>
-        <label for="postalCode" id="postalCodeLabel" class="hidden">Postal Code:</label>
-        <input type="text" id="postalCode" name="postalCode" class="hidden" readonly>
         <input type="hidden" id="userInput" name="userInput">
         <!-- Map container -->
         <div id="map"></div>
@@ -123,6 +98,7 @@
         function initAutocomplete() {
             const input = document.getElementById('addressInput');
             const autocomplete = new google.maps.places.Autocomplete(input);
+
             map = new google.maps.Map(document.getElementById('map'), {
                 center: { lat: -33.8688, lng: 151.2195 },
                 zoom: 13
@@ -141,42 +117,7 @@
                     return;
                 }
 
-                // Clear form fields
-                document.getElementById('streetName').value = '';
-                document.getElementById('houseNumber').value = '';
-                document.getElementById('city').value = '';
-                document.getElementById('state').value = '';
-                document.getElementById('postalCode').value = '';
-
-                // Populate form fields with selected place's details
-                place.address_components.forEach(function (component) {
-                    const types = component.types;
-                    if (types.includes('route')) {
-                        document.getElementById('streetName').value = component.long_name;
-                    } else if (types.includes('street_number')) {
-                        document.getElementById('houseNumber').value = component.long_name;
-                    } else if (types.includes('locality') || types.includes('sublocality') || types.includes('neighborhood')) {
-                        document.getElementById('city').value = component.long_name;
-                    } else if (types.includes('administrative_area_level_1')) {
-                        document.getElementById('state').value = component.long_name;
-                    } else if (types.includes('postal_code')) {
-                        document.getElementById('postalCode').value = component.long_name;
-                    }
-                });
-
-                // Show the address fields with fade-in animation
-                document.getElementById('streetNameLabel').classList.add('fade-in');
-                document.getElementById('streetName').classList.add('fade-in');
-                document.getElementById('houseNumberLabel').classList.add('fade-in');
-                document.getElementById('houseNumber').classList.add('fade-in');
-                document.getElementById('cityLabel').classList.add('fade-in');
-                document.getElementById('city').classList.add('fade-in');
-                document.getElementById('stateLabel').classList.add('fade-in');
-                document.getElementById('state').classList.add('fade-in');
-                document.getElementById('postalCodeLabel').classList.add('fade-in');
-                document.getElementById('postalCode').classList.add('fade-in');
-
-                // Adjust map and marker
+                // Adjust map and marker position
                 if (place.geometry.viewport) {
                     map.fitBounds(place.geometry.viewport);
                 } else {
@@ -188,37 +129,29 @@
                 marker.setVisible(true);
 
                 updateUserInput();
+
+                // Resize the widget based on map and input
+                let container = document.getElementById('container');
+                let containerHeight = window.getComputedStyle(container).height;
+                JFCustomWidget.requestFrameResize({ height: parseInt(containerHeight) + 10 });
             });
         }
 
         function updateUserInput() {
-            const userInput = [
-                document.getElementById('streetName').value,
-                document.getElementById('houseNumber').value,
-                document.getElementById('city').value,
-                document.getElementById('state').value,
-                document.getElementById('postalCode').value
-            ].filter(value => value.trim() !== '').join(', ');
-
-            document.getElementById('userInput').value = userInput;
+            const place = document.getElementById('addressInput').value;
+            document.getElementById('userInput').value = place;
             validateForm();
         }
 
         function validateForm() {
-            let houseNumber = document.getElementById('houseNumber').value;
             let addressValue = document.getElementById('userInput').value;
 
-            if (!houseNumber) {
-                document.getElementById('houseNumber').classList.add('error-border');
-                document.getElementById('houseNumberError').classList.add('show');
+            if (!addressValue) {
                 msg.value = "";
                 JFCustomWidget.sendData({ value: "" });
                 JFCustomWidget.makeWidgetRequired();
                 return false;
             } else {
-                document.getElementById('houseNumber').classList.remove('error-border');
-                document.getElementById('houseNumberError').classList.remove('show');
-                JFCustomWidget.makeWidgetNotRequired();
                 msg.value = addressValue;
                 JFCustomWidget.sendData({ value: msg.value });
                 return true;
@@ -227,27 +160,9 @@
 
         function clearFields() {
             document.getElementById('addressInput').value = '';
-            document.getElementById('streetName').value = '';
-            document.getElementById('houseNumber').value = '';
-            document.getElementById('city').value = '';
-            document.getElementById('state').value = '';
-            document.getElementById('postalCode').value = '';
-
-            document.getElementById('streetNameLabel').classList.remove('fade-in');
-            document.getElementById('streetName').classList.remove('fade-in');
-            document.getElementById('houseNumberLabel').classList.remove('fade-in');
-            document.getElementById('houseNumber').classList.remove('fade-in');
-            document.getElementById('cityLabel').classList.remove('fade-in');
-            document.getElementById('city').classList.remove('fade-in');
-            document.getElementById('stateLabel').classList.remove('fade-in');
-            document.getElementById('state').classList.remove('fade-in');
-            document.getElementById('postalCodeLabel').classList.remove('fade-in');
-            document.getElementById('postalCode').classList.remove('fade-in');
-
-            document.getElementById('houseNumber').classList.remove('error-border');
-            document.getElementById('houseNumberError').classList.remove('show');
-
             document.getElementById('userInput').value = '';
+            marker.setVisible(false);
+
             validateForm();
         }
 
@@ -255,14 +170,6 @@
 
         JFCustomWidget.subscribe("ready", function(response){
             let apiKey = JFCustomWidget.getWidgetSetting('apiKey');
-            
-            document.getElementById('addressInput').addEventListener('input', function() {
-                handleDropdownAppearance();
-            });
-
-            document.getElementById('houseNumber').addEventListener('input', function() {
-                updateUserInput();
-            });
 
             let script = document.createElement("script");
             script.src = "https://maps.googleapis.com/maps/api/js?key=" + apiKey + "&libraries=places&callback=initAutocomplete";
@@ -273,6 +180,7 @@
         JFCustomWidget.subscribe("submit", function(){
             JFCustomWidget.sendSubmit(msg);
         });
+
     </script>
 </body>
 </html>
