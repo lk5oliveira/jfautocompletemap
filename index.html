@@ -129,12 +129,6 @@
                 marker.setVisible(true);
 
                 updateUserInput();
-
-                // Resize the widget based on map and input
-                let container = document.getElementById('container');
-                let containerHeight = container.offsetHeight;
-                JFCustomWidget.requestFrameResize({ height: parseInt(containerHeight) + 10 });
-                console.log(containerHeight);
             });
         }
 
@@ -171,6 +165,11 @@
 
         JFCustomWidget.subscribe("ready", function(response){
             let apiKey = JFCustomWidget.getWidgetSetting('apiKey');
+            // Resize the widget based on map and input
+            let container = document.getElementById('container');
+            let containerHeight = container.offsetHeight;
+            JFCustomWidget.requestFrameResize({ height: parseInt(containerHeight) + 10 });
+            console.log(containerHeight);
 
             let script = document.createElement("script");
             script.src = "https://maps.googleapis.com/maps/api/js?key=" + apiKey + "&libraries=places&callback=initAutocomplete";
