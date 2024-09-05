@@ -254,7 +254,7 @@
         document.getElementById('clearButton').addEventListener('click', clearFields);
 
         JFCustomWidget.subscribe("ready", function(response){
-            let apiKey = "AIzaSyAPC89X6I0p3vXLzRwoJ7gTH-akfxuEKSA";
+            let apiKey = JFCustomWidget.getWidgetSetting('apiKey');
             
             document.getElementById('addressInput').addEventListener('input', function() {
                 handleDropdownAppearance();
