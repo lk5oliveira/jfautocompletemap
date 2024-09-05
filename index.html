@@ -75,11 +75,41 @@
             border-radius: 50%;
         }
 
-        /* New styles for map */
-        #map {
+        #map-container {
+            position: relative;
+            margin-top: 20px;
             height: 400px;
             width: 100%;
-            margin-top: 20px;
+        }
+
+        /* New styles for map */
+        #map {
+            height: 100%;
+            width: 100%;
+            border-radius: 10px;
+            filter: blur(5px); /* Default blur when no address is provided */
+        }
+
+        #map-container .map-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5em;
+            color: #333;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        /* Remove blur when address is filled */
+        #map.no-blur {
+            filter: none;
+        }
+
+        #map-container .hidden {
+            display: none;
         }
     </style>
 </head>
@@ -89,7 +119,10 @@
         <button id="clearButton">&times;</button>
         <input type="hidden" id="userInput" name="userInput">
         <!-- Map container -->
-        <div id="map"></div>
+        <div id="map-container">
+            <div id="map"></div>
+            <div id="mapMessage" class="map-message">Please enter an address to display the map</div>
+        </div>
     </div>
 
     <script>
@@ -135,6 +168,15 @@
         function updateUserInput() {
             const place = document.getElementById('addressInput').value;
             document.getElementById('userInput').value = place;
+
+            if (place) {
+                document.getElementById('map').classList.add('no-blur');
+                document.getElementById('mapMessage').classList.add('hidden');
+            } else {
+                document.getElementById('map').classList.remove('no-blur');
+                document.getElementById('mapMessage').classList.remove('hidden');
+            }
+
             validateForm();
         }
 
@@ -157,6 +199,9 @@
             document.getElementById('addressInput').value = '';
             document.getElementById('userInput').value = '';
             marker.setVisible(false);
+
+            document.getElementById('map').classList.remove('no-blur');
+            document.getElementById('mapMessage').classList.remove('hidden');
 
             validateForm();
         }
