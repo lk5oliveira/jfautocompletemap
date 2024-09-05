@@ -84,8 +84,8 @@
 
         /* Map styles with blur */
         #map {
-            height: 100%;
-            width: 100%;
+            height: 105%;
+            width: 105%;
             border-radius: 10px;
             filter: blur(5px); /* Apply blur effect when no address is provided */
             display: block;
@@ -107,6 +107,8 @@
         /* Remove blur when address is filled */
         #map.no-blur {
             filter: none; /* Remove blur when an address is selected */
+            height: 100%;
+            width: 100%;
         }
 
         #map-container .hidden {
