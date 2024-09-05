@@ -82,12 +82,13 @@
             width: 100%;
         }
 
-        /* New styles for map */
+        /* Map styles with blur */
         #map {
             height: 100%;
             width: 100%;
             border-radius: 10px;
-            filter: blur(5px); /* Default blur when no address is provided */
+            filter: blur(5px); /* Apply blur effect when no address is provided */
+            display: block;
         }
 
         #map-container .map-message {
@@ -105,7 +106,7 @@
 
         /* Remove blur when address is filled */
         #map.no-blur {
-            filter: none;
+            filter: none; /* Remove blur when an address is selected */
         }
 
         #map-container .hidden {
@@ -132,10 +133,10 @@
             const input = document.getElementById('addressInput');
             const autocomplete = new google.maps.places.Autocomplete(input);
 
-            map = new google.maps.Map(document.getElementById('map', {
+            map = new google.maps.Map(document.getElementById('map'), {
                 center: { lat: -33.8688, lng: 151.2195 },
                 zoom: 13
-            }));
+            });
 
             marker = new google.maps.Marker({
                 map: map,
@@ -186,4 +187,50 @@
             if (!addressValue) {
                 msg.value = "";
                 JFCustomWidget.sendData({ value: "" });
-                JFCustomWidget.makeWidgetRequired
+                JFCustomWidget.makeWidgetRequired();
+                return false;
+            } else {
+                msg.value = addressValue;
+                JFCustomWidget.sendData({ value: msg.value });
+                return true;
+            }
+        }
+
+        function clearFields() {
+            document.getElementById('addressInput').value = '';
+            document.getElementById('userInput').value = '';
+            marker.setVisible(false);
+
+            document.getElementById('map').classList.remove('no-blur');
+            document.getElementById('mapMessage').classList.remove('hidden');
+
+            validateForm();
+        }
+
+        document.getElementById('clearButton').addEventListener('click', clearFields);
+
+        JFCustomWidget.subscribe("ready", function(response){
+            let apiKey = JFCustomWidget.getWidgetSetting('apiKey');
+            // Resize the widget based on map and input
+            let container = document.getElementById('container');
+            let containerHeight = container.offsetHeight;
+            JFCustomWidget.requestFrameResize({ height: parseInt(containerHeight) + 10 });
+            console.log(containerHeight);
+
+            let script = document.createElement("script");
+            script.src = "https://maps.googleapis.com/maps/api/js?key=" + apiKey + "&libraries=places&callback=initAutocomplete";
+            script.async = true;
+            document.head.appendChild(script);
+        });
+
+        JFCustomWidget.subscribe("submit", function(){
+            JFCustomWidget.sendSubmit(msg);
+        });
+
+        // Check if the address input is empty initially to show the message
+        document.getElementById('addressInput').addEventListener('input', function() {
+            updateUserInput();
+        });
+    </script>
+</body>
+</html>
