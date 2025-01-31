@@ -225,6 +225,16 @@
             JFCustomWidget.requestFrameResize({ height: parseInt(containerHeight) + 10 });
             console.log(containerHeight);
 
+            JFCustomWidget.subscribe("populate", function(data) {
+                if (data && data.value) {
+                document.getElementById('addressInput').value = data.value;
+                document.getElementById('userInput').value = data.value;
+                
+                // Atualiza o mapa e demais lógicas
+                updateUserInput();
+                }
+            });
+
             let script = document.createElement("script");
             script.src = "https://maps.googleapis.com/maps/api/js?key=" + apiKey + "&libraries=places&callback=initAutocomplete";
             script.async = true;
