@@ -1,266 +1,130 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Address Search with Map</title>
-    <script src="//js.jotform.com/JotFormCustomWidget.min.js"></script>
+<script>
+    let map, marker, msg = { valid: true, value: "" };
 
-    <style>
-        body {
-            margin: 0px;
-        }
-        .pac-container::after {
-            display: none !important;
-        }
+    function initAutocomplete() {
+        const input = document.getElementById('addressInput');
+        const autocomplete = new google.maps.places.Autocomplete(input);
 
-        #container {
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: { lat: -33.8688, lng: 151.2195 },
+            zoom: 13
+        });
 
-        input {
-            flex: 1;
-            --rem: 16;
-            list-style: none;
-            box-sizing: border-box;
-            outline: 0;
-            margin: 0;
-            text-align: left;
-            padding: 0 .625em;
-            height: 2.5em;
-            min-height: 2.5em;
-            color: #2c3345;
-            background-color: #fff;
-            font-size: 1em;
-            border-radius: 4px;
-            display: block;
-            font-family: inherit;
-            border: 1px solid #f23a3c;
-            border-width: 1px;
-            border-color: rgb(184, 189, 201);
-            min-width: 100%;
-            max-width: 100%;
-            width: 310px;
-        }
+        marker = new google.maps.Marker({
+            map: map,
+            anchorPoint: new google.maps.Point(0, -29)
+        });
 
-        input:read-only {
-            background-color: #f3f3f3;
-        }
-
-        .error-border {
-            border: 1px solid red;
-        }
-
-        .error-message {
-            color: red;
-            font-size: 12px;
-            display: none;
-        }
-
-        .show {
-            display: block;
-        }
-
-        #clearButton {
-            position: absolute;
-            right: 10px;
-            top: 8px;
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            background: #ebebeb;
-            border-radius: 50%;
-        }
-
-        #map-container {
-            position: relative;
-            margin-top: 20px;
-            height: 200px;
-            width: 100%;
-            border: 1px solid #e2e2e2; /* Define a clear border */
-            border-radius: 10px;    /* Apply border-radius to the container */
-            overflow: hidden;       /* Ensure child elements follow the border-radius */
-            background-color: #ccc; /* Set a gray background initially */
-        }
-
-        /* Map styles */
-        #map {
-            height: 100%;
-            width: 100%;
-            border-radius: 10px;
-            background-color: #ccc; /* Set a gray background initially */
-            opacity: 0; /* Map is hidden initially */
-            transform: scale(0.9); /* Initial scale for animation */
-            transition: opacity 0.6s ease, transform 0.6s ease; /* Add smooth animation */
-        }
-
-        #map.show-map {
-            opacity: 1; /* Make map visible */
-            transform: scale(1); /* Scale to normal size */
-        }
-
-        #map-container .map-message {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 1em;
-            color: #333;
-            background-color: rgba(255, 255, 255, 0.8);
-            padding: 10px;
-            border-radius: 5px;
-            text-align: center;
-        }
-
-        #map-container .hidden {
-            display: none;
-        }
-    </style>
-</head>
-<body>
-    <div id="container">
-        <input type="text" id="addressInput">
-        <button id="clearButton">&times;</button>
-        <input type="hidden" id="userInput" name="userInput">
-        <!-- Map container -->
-        <div id="map-container">
-            <div id="map"></div>
-            <div id="mapMessage" class="map-message">Please enter an address to display the map</div>
-        </div>
-    </div>
-
-    <script>
-        let map, marker, msg = { valid: true, value: "" };
-
-        function initAutocomplete() {
-            const input = document.getElementById('addressInput');
-            const autocomplete = new google.maps.places.Autocomplete(input);
-
-            map = new google.maps.Map(document.getElementById('map'), {
-                center: { lat: -33.8688, lng: 151.2195 },
-                zoom: 13
-            });
-
-            marker = new google.maps.Marker({
-                map: map,
-                anchorPoint: new google.maps.Point(0, -29)
-            });
-
-            autocomplete.addListener('place_changed', function () {
-                const place = autocomplete.getPlace();
-                
-                if (!place.geometry) {
-                    console.error("No details available for input: '" + place.name + "'");
-                    return;
-                }
-
-                marker.setVisible(false);
-
-                // Adjust map and marker position
-                if (place.geometry.viewport) {
-                    map.fitBounds(place.geometry.viewport);
-                } else {
-                    map.setCenter(place.geometry.location);
-                    map.setZoom(17);  // Zoom in when the place is selected
-                }
-
-                marker.setPosition(place.geometry.location);
-                marker.setVisible(true);
-
-                updateUserInput();
-            });
-        }
-
-        function updateUserInput() {
-            const place = document.getElementById('addressInput').value;
-            document.getElementById('userInput').value = place;
-
-            if (place) {
-                document.getElementById('map').classList.add('show-map');
-                document.getElementById('mapMessage').classList.add('hidden');
-            } else {
-                document.getElementById('map').classList.remove('show-map');
-                document.getElementById('mapMessage').classList.remove('hidden');
+        autocomplete.addListener('place_changed', function () {
+            const place = autocomplete.getPlace();
+            
+            if (!place.geometry) {
+                console.error("No details available for input: '" + place.name + "'");
+                return;
             }
 
-            validateForm();
-        }
-
-        function validateForm() {
-            let addressValue = document.getElementById('userInput').value;
-
-            if (!addressValue) {
-                msg.value = "";
-                JFCustomWidget.sendData({ value: "" });
-                JFCustomWidget.makeWidgetRequired();
-                return false;
-            } else {
-                msg.value = addressValue;
-                JFCustomWidget.sendData({ value: msg.value });
-                return true;
-            }
-        }
-
-        function clearFields() {
-            document.getElementById('addressInput').value = '';
-            document.getElementById('userInput').value = '';
             marker.setVisible(false);
 
+            if (place.geometry.viewport) {
+                map.fitBounds(place.geometry.viewport);
+            } else {
+                map.setCenter(place.geometry.location);
+                map.setZoom(17);
+            }
+
+            marker.setPosition(place.geometry.location);
+            marker.setVisible(true);
+
+            updateUserInput();
+        });
+    }
+
+    function updateUserInput() {
+        const place = document.getElementById('addressInput').value;
+        document.getElementById('userInput').value = place;
+
+        if (place) {
+            document.getElementById('map').classList.add('show-map');
+            document.getElementById('mapMessage').classList.add('hidden');
+        } else {
             document.getElementById('map').classList.remove('show-map');
             document.getElementById('mapMessage').classList.remove('hidden');
-
-            validateForm();
         }
 
-        document.getElementById('clearButton').addEventListener('click', clearFields);
+        validateForm();
+    }
 
-        JFCustomWidget.subscribe("ready", function(response){
-            let apiKey = JFCustomWidget.getWidgetSetting('apiKey');
-            // Resize the widget based on map and input
-            let container = document.getElementById('container');
-            let containerHeight = container.offsetHeight;
-            JFCustomWidget.requestFrameResize({ height: parseInt(containerHeight) + 10 });
-            console.log(containerHeight);
+    function validateForm() {
+        let addressValue = document.getElementById('userInput').value;
 
-            let script = document.createElement("script");
-            script.src = "https://maps.googleapis.com/maps/api/js?key=" + apiKey + "&libraries=places&callback=initAutocomplete";
-            script.async = true;
-            document.head.appendChild(script);
-        });
+        if (!addressValue) {
+            msg.value = "";
+            JFCustomWidget.sendData({ value: "" });
+            JFCustomWidget.makeWidgetRequired();
+            return false;
+        } else {
+            msg.value = addressValue;
+            JFCustomWidget.sendData({ value: msg.value }); // Sends updated value to Jotform
+            return true;
+        }
+    }
 
-        // ✅ Handle "Save and Continue Later" by listening for the populate event
-        JFCustomWidget.subscribe("populate", function(data) {
-            console.log("Populating saved data:", data); // Debugging log
-    
-            if (data && data.value) {
-                document.getElementById('addressInput').value = data.value;
-                document.getElementById('userInput').value = data.value;
-                
-                // Update the map if an address is restored
-                document.getElementById('map').classList.add('show-map');
-                document.getElementById('mapMessage').classList.add('hidden');
-    
-                // Send restored data back to Jotform
-                JFCustomWidget.sendData({ value: data.value });
-            }
-        });
+    function clearFields() {
+        document.getElementById('addressInput').value = '';
+        document.getElementById('userInput').value = '';
+        marker.setVisible(false);
 
-        JFCustomWidget.subscribe("submit", function(){
-            JFCustomWidget.sendSubmit(msg);
-        });
+        document.getElementById('map').classList.remove('show-map');
+        document.getElementById('mapMessage').classList.remove('hidden');
 
-        // Check if the address input is empty initially to show the message
-        document.getElementById('addressInput').addEventListener('input', function() {
-            const input = document.getElementById('addressInput').value;
-            // Do not show the map until a place is selected from Google Places
-            if (!input) {
-                document.getElementById('map').classList.remove('show-map');
-                document.getElementById('mapMessage').classList.remove('hidden');
-            }
-        });
-    </script>
-</body>
-</html>
+        validateForm();
+    }
+
+    document.getElementById('clearButton').addEventListener('click', clearFields);
+
+    JFCustomWidget.subscribe("ready", function(response){
+        let apiKey = JFCustomWidget.getWidgetSetting('apiKey');
+        
+        let container = document.getElementById('container');
+        let containerHeight = container.offsetHeight;
+        JFCustomWidget.requestFrameResize({ height: parseInt(containerHeight) + 10 });
+
+        console.log(containerHeight);
+
+        let script = document.createElement("script");
+        script.src = "https://maps.googleapis.com/maps/api/js?key=" + apiKey + "&libraries=places&callback=initAutocomplete";
+        script.async = true;
+        document.head.appendChild(script);
+    });
+
+    // ✅ Handle "Save and Continue Later" by listening for the populate event
+    JFCustomWidget.subscribe("populate", function(data) {
+        console.log("Populating saved data:", data); // Debugging log
+
+        if (data && data.value) {
+            document.getElementById('addressInput').value = data.value;
+            document.getElementById('userInput').value = data.value;
+            
+            // Update the map if an address is restored
+            document.getElementById('map').classList.add('show-map');
+            document.getElementById('mapMessage').classList.add('hidden');
+
+            // Send restored data back to Jotform
+            JFCustomWidget.sendData({ value: data.value });
+        }
+    });
+
+    // Ensure data is sent on submission
+    JFCustomWidget.subscribe("submit", function(){
+        JFCustomWidget.sendSubmit(msg);
+    });
+
+    // Handle map visibility based on input
+    document.getElementById('addressInput').addEventListener('input', function() {
+        const input = document.getElementById('addressInput').value;
+        if (!input) {
+            document.getElementById('map').classList.remove('show-map');
+            document.getElementById('mapMessage').classList.remove('hidden');
+        }
+    });
+</script>
