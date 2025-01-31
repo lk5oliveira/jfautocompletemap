@@ -132,128 +132,135 @@
         </div>
     </div>
 
-    <script>
-        let map, marker, msg = { valid: true, value: "" };
+<script>
+    let map, marker, msg = { valid: true, value: "" };
 
-        function initAutocomplete() {
-            const input = document.getElementById('addressInput');
-            const autocomplete = new google.maps.places.Autocomplete(input);
+    function initAutocomplete() {
+        const input = document.getElementById('addressInput');
+        const autocomplete = new google.maps.places.Autocomplete(input);
 
-            map = new google.maps.Map(document.getElementById('map'), {
-                center: { lat: -33.8688, lng: 151.2195 },
-                zoom: 13
-            });
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: { lat: -33.8688, lng: 151.2195 },
+            zoom: 13
+        });
 
-            marker = new google.maps.Marker({
-                map: map,
-                anchorPoint: new google.maps.Point(0, -29)
-            });
+        marker = new google.maps.Marker({
+            map: map,
+            anchorPoint: new google.maps.Point(0, -29)
+        });
 
-            autocomplete.addListener('place_changed', function () {
-                const place = autocomplete.getPlace();
-                
-                if (!place.geometry) {
-                    console.error("No details available for input: '" + place.name + "'");
-                    return;
-                }
-
-                marker.setVisible(false);
-
-                // Adjust map and marker position
-                if (place.geometry.viewport) {
-                    map.fitBounds(place.geometry.viewport);
-                } else {
-                    map.setCenter(place.geometry.location);
-                    map.setZoom(17);  // Zoom in when the place is selected
-                }
-
-                marker.setPosition(place.geometry.location);
-                marker.setVisible(true);
-
-                updateUserInput();
-            });
-        }
-
-        function updateUserInput() {
-            const place = document.getElementById('addressInput').value;
-            document.getElementById('userInput').value = place;
-
-            if (place) {
-                document.getElementById('map').classList.add('show-map');
-                document.getElementById('mapMessage').classList.add('hidden');
-            } else {
-                document.getElementById('map').classList.remove('show-map');
-                document.getElementById('mapMessage').classList.remove('hidden');
+        autocomplete.addListener('place_changed', function () {
+            const place = autocomplete.getPlace();
+            
+            if (!place.geometry) {
+                console.error("No details available for input: '" + place.name + "'");
+                return;
             }
 
-            validateForm();
-        }
-
-        function validateForm() {
-            let addressValue = document.getElementById('userInput').value;
-
-            if (!addressValue) {
-                msg.value = "";
-                JFCustomWidget.sendData({ value: "" });
-                JFCustomWidget.makeWidgetRequired();
-                return false;
-            } else {
-                msg.value = addressValue;
-                JFCustomWidget.sendData({ value: msg.value });
-                return true;
-            }
-        }
-
-        function clearFields() {
-            document.getElementById('addressInput').value = '';
-            document.getElementById('userInput').value = '';
             marker.setVisible(false);
 
+            if (place.geometry.viewport) {
+                map.fitBounds(place.geometry.viewport);
+            } else {
+                map.setCenter(place.geometry.location);
+                map.setZoom(17);
+            }
+
+            marker.setPosition(place.geometry.location);
+            marker.setVisible(true);
+
+            updateUserInput();
+        });
+    }
+
+    function updateUserInput() {
+        const place = document.getElementById('addressInput').value;
+        document.getElementById('userInput').value = place;
+
+        if (place) {
+            document.getElementById('map').classList.add('show-map');
+            document.getElementById('mapMessage').classList.add('hidden');
+        } else {
             document.getElementById('map').classList.remove('show-map');
             document.getElementById('mapMessage').classList.remove('hidden');
-
-            validateForm();
         }
 
-        document.getElementById('clearButton').addEventListener('click', clearFields);
+        validateForm();
+    }
 
-        JFCustomWidget.subscribe("ready", function(response){
-            let apiKey = JFCustomWidget.getWidgetSetting('apiKey');
-            // Resize the widget based on map and input
-            let container = document.getElementById('container');
-            let containerHeight = container.offsetHeight;
-            JFCustomWidget.requestFrameResize({ height: parseInt(containerHeight) + 10 });
-            console.log(containerHeight);
+    function validateForm() {
+        let addressValue = document.getElementById('userInput').value;
 
-            JFCustomWidget.subscribe("populate", function(data) {
-                if (data && data.value) {
-                document.getElementById('addressInput').value = data.value;
-                document.getElementById('userInput').value = data.value;
-                
-                // Atualiza o mapa e demais lógicas
-                updateUserInput();
-                }
-            });
+        if (!addressValue) {
+            msg.value = "";
+            JFCustomWidget.sendData({ value: "" });
+            JFCustomWidget.makeWidgetRequired();
+            return false;
+        } else {
+            msg.value = addressValue;
+            JFCustomWidget.sendData({ value: msg.value }); // Sends updated value to Jotform
+            return true;
+        }
+    }
 
-            let script = document.createElement("script");
-            script.src = "https://maps.googleapis.com/maps/api/js?key=" + apiKey + "&libraries=places&callback=initAutocomplete";
-            script.async = true;
-            document.head.appendChild(script);
-        });
+    function clearFields() {
+        document.getElementById('addressInput').value = '';
+        document.getElementById('userInput').value = '';
+        marker.setVisible(false);
 
-        JFCustomWidget.subscribe("submit", function(){
-            JFCustomWidget.sendSubmit(msg);
-        });
+        document.getElementById('map').classList.remove('show-map');
+        document.getElementById('mapMessage').classList.remove('hidden');
 
-        // Check if the address input is empty initially to show the message
-        document.getElementById('addressInput').addEventListener('input', function() {
-            const input = document.getElementById('addressInput').value;
-            // Do not show the map until a place is selected from Google Places
-            if (!input) {
-                document.getElementById('map').classList.remove('show-map');
-                document.getElementById('mapMessage').classList.remove('hidden');
-            }
-        });
-    </script>
+        validateForm();
+    }
+
+    document.getElementById('clearButton').addEventListener('click', clearFields);
+
+    JFCustomWidget.subscribe("ready", function(response){
+        let apiKey = JFCustomWidget.getWidgetSetting('apiKey');
+        
+        let container = document.getElementById('container');
+        let containerHeight = container.offsetHeight;
+        JFCustomWidget.requestFrameResize({ height: parseInt(containerHeight) + 10 });
+
+        console.log(containerHeight);
+
+        let script = document.createElement("script");
+        script.src = "https://maps.googleapis.com/maps/api/js?key=" + apiKey + "&libraries=places&callback=initAutocomplete";
+        script.async = true;
+        document.head.appendChild(script);
+    });
+
+    // ✅ Handle "Save and Continue Later" by listening for the populate event
+    JFCustomWidget.subscribe("populate", function(data) {
+        console.log("Populating saved data:", data); // Debugging log
+
+        if (data && data.value) {
+            document.getElementById('addressInput').value = data.value;
+            document.getElementById('userInput').value = data.value;
+            
+            // Update the map if an address is restored
+            document.getElementById('map').classList.add('show-map');
+            document.getElementById('mapMessage').classList.add('hidden');
+
+            // Send restored data back to Jotform
+            JFCustomWidget.sendData({ value: data.value });
+        }
+    });
+
+    // Ensure data is sent on submission
+    JFCustomWidget.subscribe("submit", function(){
+        JFCustomWidget.sendSubmit(msg);
+    });
+
+    // Handle map visibility based on input
+    document.getElementById('addressInput').addEventListener('input', function() {
+        const input = document.getElementById('addressInput').value;
+        if (!input) {
+            document.getElementById('map').classList.remove('show-map');
+            document.getElementById('mapMessage').classList.remove('hidden');
+        }
+    });
+</script>
 </body>
 </html>
